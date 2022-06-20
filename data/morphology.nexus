@@ -1,0 +1,21 @@
+#NEXUS
+
+BEGIN DATA;
+  DIMENSIONS NTAX=12 NCHAR=16;
+  FORMAT DATATYPE=STANDARD MISSING=? GAP=- INTERLEAVE=NO symbols="01234";
+  MATRIX
+    f_Euphysalodes                       ??????0001111(34)11
+    f_Physalis_infinemundi			     ???????111111(34)11
+    Alkekengi_officinarum                0001100111111011
+    Brunfelsia_plowmaniana               0?1??00001110100
+    Capsicum_chacoense                   0021100002110001
+    Hyoscyamus_niger                     01?0100001111301
+    Nicotiana_glauca                     1010100001100101
+    Physalis_peruviana                   0021100111111011
+    Schizanthus_grahamii                 1001100001110101
+    Solanum_juvenale                     0021100001100001
+    Solanum_tuberosum                    012?000001100001
+	Ipomoea_batatas			             11?0?000011??101
+  ;
+END;
+

@@ -1,0 +1,23 @@
+#NEXUS
+
+	Begin taxa;
+	Dimensions ntax=12;
+	Taxlabels
+		Alkekengi_officinarum
+		Brunfelsia_plowmaniana
+		Capsicum_chacoense
+		Hyoscyamus_niger
+		Ipomoea_batatas
+		Nicotiana_glauca
+		Physalis_peruviana
+		Schizanthus_grahamii
+		Solanum_juvenale
+		Solanum_tuberosum
+		f_Euphysalodes
+		f_Physalis_infinemundi
+		;
+End;
+
+Begin trees;
+tree TREE1 = [&R]((((((((Alkekengi_officinarum[&index=10]:3.536378,Physalis_peruviana[&index=8]:3.536378)[&index=13,posterior=1.000000,age_95%_HPD={1.18199,6.80128}]:4.269194,(Capsicum_chacoense[&index=5]:6.937391,Hyoscyamus_niger[&index=7]:6.937391)[&index=14,posterior=0.608261,age_95%_HPD={2.79761,11.3718}]:0.868180)[&index=15,posterior=1.000000,age_95%_HPD={3.06533,12.0229}]:1.282776,(Solanum_juvenale[&index=11]:5.514550,Solanum_tuberosum[&index=12]:5.514550)[&index=16,posterior=1.000000,age_95%_HPD={1.47449,9.17117}]:3.573798)[&index=17,posterior=1.000000,age_95%_HPD={3.54288,13.6808}]:2.050267,(Brunfelsia_plowmaniana[&index=3]:10.179194,Nicotiana_glauca[&index=4]:10.179194)[&index=18,posterior=0.401066,age_95%_HPD={3.91115,15.8553}]:0.959420)[&index=19,posterior=1.000000,age_95%_HPD={4.20413,17.3342}]:4.105622,Schizanthus_grahamii[&index=1]:15.244236)[&index=20,posterior=0.980013,age_95%_HPD={7.0956,25.3536}]:12.051162,Ipomoea_batatas[&index=2]:27.295398)[&index=21,posterior=0.882745,age_95%_HPD={13.266,42.1666}]:19.619020,f_Euphysalodes[&index=6,sampled_ancestor=0.005330,age_95%_HPD={34.0609,46.2376}]:6.709390)[&index=22,posterior=0.768821,age_95%_HPD={35.8837,58.179}]:11.484638,f_Physalis_infinemundi[&index=9,sampled_ancestor=0.007995,age_95%_HPD={52.0591,52.4269}]:6.154980)[&index=23,posterior=0.994670,age_95%_HPD={52.146,69.6536}]:0.000000;
+End;

@@ -1,0 +1,103 @@
+#-------------------------------#
+#    THE TIME TREE MODEL        #
+# Using a FBD process timetree  #
+#-------------------------------#
+
+# # First we specify some dataset-specific parameters
+extant_taxa = 9                 # total number of extant taxa in the tree
+total_taxa  = 2800              # total number of extant taxa in the group
+rho <- extant_taxa/total_taxa   # sampling fraction
+
+# Lets specify an origin time rather than a root
+# I will use the age for Solanales Crown in Magallon 
+# because that's the age where the lineage that gave origing to Solanaceae + Convulvulaceae
+# 75.41, 95% HPD 85.91-100.34
+origin_min = 85.91
+origin_max = 100.34
+origin_time ~ dnUniform(origin_min, origin_max)
+moves.append( mvSlide( origin_time, weight = 5) )
+
+
+# CONSTANT RATE DIVERSIFICATION MODEL
+  
+# empirical prior on the diversification rate
+diversification_prior_mean <- ln(total_taxa) / origin_time
+diversification_prior_sd   <- H
+
+# the diversification rate
+diversification ~ dnLognormal( ln(diversification_prior_mean) - diversification_prior_sd * diversification_prior_sd * 0.5, diversification_prior_sd)
+moves.append( mvScale(diversification, weight = 1.0) )
+
+# the relative extinction rate
+relext ~ dnUniform(0, 1)
+moves.append( mvSlide(relext, weight = 1.0) )
+
+# transform to real parameters
+lambda := abs(diversification / (1 - relext))
+mu     := abs(lambda * relext)
+
+
+# CONSTANT-RATE FOSSILIZATION MODEL
+
+# empirical prior on the fossilization rate
+fossilization_prior_mean <- num_fossils * diversification_prior_mean / (exp(diversification_prior_mean * origin_time) - 1)
+fossilization_prior_sd   <- 2 * H
+
+# the fossilization rate
+psi ~ dnLognormal( ln(fossilization_prior_mean) - fossilization_prior_sd * fossilization_prior_sd * 0.5, fossilization_prior_sd)
+# add moves
+moves.append( mvScale(psi, weight = 1.0) )
+
+
+# make the FBD tree
+
+timetree ~ dnFBDP(
+    originAge = origin_time,
+    lambda = lambda,
+    mu = mu,
+    psi = psi, 
+    condition = "survival",
+    taxa = taxa,
+    rho = rho
+)
+
+# MCMC proposals on the tree
+moves.append( mvSubtreeScale(timetree, weight=ntax/5.0) )
+moves.append( mvFNPR(timetree,                       weight = ntax                             ) )
+moves.append( mvNarrow(timetree,                     weight = 5 * ntax                         ) )
+moves.append( mvNodeTimeSlideUniform(timetree,       weight = 5 * ntax                         ) )
+moves.append( mvSubtreeScale(timetree,               weight = 5 * ntax                         ) )
+moves.append( mvRootTimeSlideUniform(timetree,       weight = ntax,        origin = origin_time) ) #only when using origin
+
+
+# MCMC proposals on whether fossils are sampled ancestors
+moves.append( mvCollapseExpandFossilBranch(timetree, weight = num_fossils, origin = origin_time) )
+num_sampled_ancestors := timetree.numSampledAncestors()
+
+# MCMC proposals on the fossil ages
+fossils = timetree.getFossils()
+for(i in 1:fossils.size()) {
+
+  # get the fossil age
+  t[i] := tmrca(timetree, clade(fossils[i]))
+
+  # specify the age contraint
+  a = fossils[i].getMinAge()
+  b = fossils[i].getMaxAge()
+
+  F[i] ~ dnUniform(t[i] - b, t[i] - a)
+  F[i].clamp( 0 )
+
+  # specify a proposal on the fossil age
+  moves.append( mvFossilTimeSlideUniform(timetree, origin_time, fossils[i], weight = 1.0) ) 
+
+}
+
+# keep track of the tree length
+TL := timetree.treeLength()
+
+# make a joint proposal for the tree (and later the branch rates)
+moves.append( mvUpDownScale(weight=10, tuneTarget=0.234, lambda=0.01) )
+tree_scale_move_index = moves.size()
+moves[tree_scale_move_index].addVariable(timetree,    up=false)
+moves[tree_scale_move_index].addVariable(origin_time, up=false)

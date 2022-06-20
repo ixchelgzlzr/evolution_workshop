@@ -1,0 +1,199 @@
+##############################################################################
+#       Total Evidence Dating using the Fossilized Birth-Death Process       #
+#                                                                            #
+#  as part of the "Paleobotany and divergence time estimates using RevBayes" #
+#  workshop at Evolution 2022                                                #
+#                                                                            #
+#                                         Script by Ixchel González Ramírez  #
+##############################################################################
+
+
+#------------------------------------#
+# READING-IN AND PREPARATION OF DATA #
+#------------------------------------#
+
+# read the sequence data
+    # we specify the directory where all the alignments are stored
+
+moledata = readDiscreteCharacterData("data/alignments/", alwaysReturnAsVector = TRUE) 
+naln     = moledata.size() # the number of alignments
+
+# read the morphological data
+morphdata = readDiscreteCharacterData("data/morphology.nexus")
+
+
+# read the taxon data
+taxa    = readTaxonData("data/taxa.tsv", delimiter=TAB)
+ntax    = taxa.size() # number of taxa
+nbranch = 2 * ntax - 2  # number of branches in rooted phylogeny
+
+
+# count the number of fossils using a for loop
+
+num_fossils = 0
+
+for(i in 1:taxa.size()) {
+  if (taxa[i].getMinAge() != 0) {
+    num_fossils = num_fossils + 1
+  }
+}
+
+
+# the alignments do not have the total number of taxa, 
+# we need to manually add missing taxa to the sequence data:
+
+for(i in 1:naln) {
+  x = moledata[i]
+  x.addMissingTaxa(taxa)
+  moledata[i] = x
+}
+
+
+# add missing taxa to the morphological data
+morphdata.addMissingTaxa(taxa)
+
+
+# partition morphological data by number of states
+n_max_states = 10  # consider changing this for your own data, if necessary
+
+
+  # start a counter
+idx = 0
+
+  # for each number of character states
+for (i in 2:n_max_states) {
+
+    # make a tempory character alignment
+    morph_tmp <- morphdata
+
+    # retain characters with i states
+    morph_tmp.setNumStatesPartition(i)
+
+    # if there are more than zero characters with this many states...
+    # store the data partition
+    if ( morph_tmp.nchar() > 0 ) {
+        morph_partitions[++idx] = morph_tmp
+        nc[idx] = i
+    }
+}
+
+
+# compute the number of morphological partitions
+num_morph_parts = morph_partitions.size()
+
+
+
+#----------------------#
+#  RevBayes SPECIFICS  #
+#----------------------#
+
+# moves container
+# create empty vector of moves
+# we will fill it as we specify moves
+moves = VectorMoves()
+
+# monitors vector
+monitors = VectorMonitors()
+
+
+# convenient constants
+H = ln(10) / (qnorm(0.975) - qnorm(0.025))
+
+
+
+#---------------------#
+# THE TIME TREE MODEL #
+#---------------------#
+
+source("scripts/time_tree_model.Rev")
+
+
+
+#-------------------------------#
+# THE MOLECULAR EVOLUTION MODEL #
+#-------------------------------#
+
+source("scripts/mol_evol_model.Rev")
+
+
+
+#---------------------------#
+# THE MOLECULAR CLOCK MODEL #
+#---------------------------#
+
+source("scripts/mol_clock_model.Rev")
+
+# Make the CTMC for molecular data
+
+for(i in 1:naln) {
+  seq[i] ~ dnPhyloCTMC(timetree, mole_Q[i], branchRates = mole_branch_rates, siteRates = mole_site_rates[i] * mole_relative_rates[i])
+  seq[i].clamp( moledata[i] )
+}
+
+#-----------------------------------#
+# THE MORPHOLOGICAL EVOLUTION MODEL #
+#-----------------------------------#
+
+source("scripts/morph_evol_model.Rev")
+
+
+
+#-------------------------------#
+# THE MORPHOLOGICAL CLOCK MODEL #
+#-------------------------------#
+
+source("scripts/morph_clock_model.Rev")
+
+# Make the CTMC for morphological data
+
+for (i in 1:morph_Q.size()){
+  morph[i] ~ dnPhyloCTMC(timetree, morph_Q[i], branchRates = morph_branch_rates, siteRates = morph_site_rates, coding  = "variable", type = "Standard")
+  morph[i].clamp ( morph_partitions[i] )
+}
+
+
+# MAKE THE MODEL
+my_model = model(timetree)
+
+
+# Up to this point we have been specifying the parameters of the model
+# Now we need to run the analysis
+
+
+#----------------------#
+# RUNNING THE ANALYSIS #
+#----------------------#
+
+# specifying the output directory
+output_dir      = "output"
+output_extra    = "run_1" # change the name as you wish
+output_filename = output_dir + "/" + output_extra + "/"
+
+
+# print genereation every 10 iteration
+printgen <- 10
+
+
+# make monitors 
+monitors.append( mnScreen(printgen = printgen) )
+monitors.append( mnModel(filename  = output_filename + "params.log", printgen = printgen, exclude = ["F"]) )
+monitors.append( mnFile(filename   = output_filename + "tree.trees", printgen = printgen, timetree) )
+
+ITERATIONS = 20000
+BURNIN     = 1000
+
+
+# make the analysis
+my_mcmc = mcmc(my_model, monitors, moves)
+my_mcmc.burnin(BURNIN, tuningInterval=5)
+my_mcmc.run(ITERATIONS)
+
+# Making a summary tree:
+  # Read trace
+full_trees = readTreeTrace(output_filename + "tree.trees", "clock")
+
+  # Get the Maximum credibility tree (MCC)
+mccTree(full_trees, output_filename + "MCC_tree.tre", conditionalAges = TRUE)
+
+  # get the Maximum a posteriori tree (MAP) 
+mapTree(full_trees, output_filename + "MAP_tree.tre")
