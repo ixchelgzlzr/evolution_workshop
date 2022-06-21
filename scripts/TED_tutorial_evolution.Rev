@@ -13,10 +13,19 @@
 #------------------------------------#
 
 # read the sequence data
-    # we specify the directory where all the alignments are stored
+    # get the name of our files
+markers <- v(
+  "data/alignments/ITS_aligned.fasta",
+  "data/alignments/trnLF_aligned.fasta",
+  "data/alignments/waxy_aligned.fasta"
+  )
+    # how many alignmentes do we have
+naln <-markers.size()
 
-moledata = readDiscreteCharacterData("data/alignments/", alwaysReturnAsVector = TRUE) 
-naln     = moledata.size() # the number of alignments
+    #read the alignments
+for(i in 1:naln) {
+    moledata[i] = readDiscreteCharacterData(markers[i]) 
+}
 
 # read the morphological data
 morphdata = readDiscreteCharacterData("data/morphology.nexus")

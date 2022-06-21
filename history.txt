@@ -1,0 +1,56 @@
+moledata = readDiscreteCharacterData("data/alignments/", alwaysReturnAsVector = TRUE) 
+naln     = moledata.size() # the number of alignments
+naln
+ls()
+ls("data/")
+listFiles("data/alignments")
+markers <- listFiles("data/alignments")
+markers
+nalign <-markers.size()
+nalign
+for(i in 1:naln) {
+    moledata[i] = readDiscreteCharacterData(markers[i], alwaysReturnAsVector = TRUE) 
+}
+moledata
+q()
+moledata[1]
+moledata = readDiscreteCharacterData("data/alignments/", alwaysReturnAsVector = TRUE) 
+moledata[1]
+q()
+ls
+ls()
+markers <- listFiles("data/alignments")
+naln <-markers.size()
+for(i in 1:naln) {
+    moledata = readDiscreteCharacterData(markers[i], alwaysReturnAsVector = TRUE) 
+}
+q()
+markers <- listFiles("data/alignments")
+naln <-markers.size()
+naln
+for (i in 1:morph_Q.size()){
+  morph[i] ~ dnPhyloCTMC(timetree, morph_Q[i], branchRates = morph_branch_rates, siteRates = morph_site_rates, coding  = "variable", type = "Standard")
+  morph[i].clamp ( morph_partitions[i] )
+}
+for(i in 1:naln) {
+    moledata = readDiscreteCharacterData(markers[i], alwaysReturnAsVector = TRUE) 
+}
+moledata
+q()
+markers <- listFiles("data/alignments")
+    # how many alignmentes do we have
+naln <-markers.size()
+    #read the alignments
+for(i in 1:naln) {
+    moledata[i] = readDiscreteCharacterData(markers[i]) 
+}
+markers[1]
+ls
+q()
+markers <- v(
+  "data/alignments/ITS_aligned.fasta",
+  "data/alignments/trnLF_aligned.fasta",
+  "data/alignments/waxy_aligned.fasta"
+  )
+markers
+q()
