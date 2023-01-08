@@ -54,3 +54,17 @@ markers <- v(
   )
 markers
 q()
+markers <- v(
+  "data/alignments/ITS_aligned.fasta",
+  "data/alignments/trnLF_aligned.fasta",
+  "data/alignments/waxy_aligned.fasta"
+  )
+markers
+for(i in 1:naln) {
+    moledata[i] = readDiscreteCharacterData(markers[i]) 
+}
+naln <-markers.size()
+for(i in 1:naln) {
+    moledata[i] = readDiscreteCharacterData(markers[i]) 
+}
+q()
